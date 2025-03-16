@@ -11,6 +11,10 @@ pub fn build(b: *std.Build) void {
     });
 
     const tokenizer = b.dependency("tokenizer", .{});
+
+    const tokenizer_step = tokenizer.builder.getInstallStep();
+    b.getInstallStep().dependOn(tokenizer_step);
+
     exe_mod.addImport("tokenizer", tokenizer.module("tokenizer"));
 
     const exe = b.addExecutable(.{
