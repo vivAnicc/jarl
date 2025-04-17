@@ -1,0 +1,22 @@
+// let a: bool = ...
+// let b: bool = ...
+
+let empty = fn (val: any any type) type (void) {
+	
+};
+
+let e: empty(0) = any any type;
+let c: usize = e; // empty(0) -> typeof(0) -> buildtime_int -> usize
+
+// bool
+if (a) {
+	// bool
+
+	b
+} else {
+	// empty(false) -> typeof(false) -> bool
+
+	empty(false)
+}
+
+a and b
