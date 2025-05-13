@@ -3,3 +3,7 @@ tokenizer
 zig-out/bin
 type-system
 backend
+ast
+parser
+ast
+parser

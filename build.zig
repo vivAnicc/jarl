@@ -17,6 +17,13 @@ pub fn build(b: *std.Build) void {
 
     exe_mod.addImport("tokenizer", tokenizer.module("tokenizer"));
 
+    const parser = b.dependency("parser", .{});
+
+    const parser_step = parser.builder.getInstallStep();
+    b.getInstallStep().dependOn(parser_step);
+
+    exe_mod.addImport("parser", parser.module("parser"));
+
     const exe = b.addExecutable(.{
         .name = "jarl",
         .root_module = exe_mod,

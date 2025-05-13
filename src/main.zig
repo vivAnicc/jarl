@@ -1,5 +1,6 @@
 const std = @import("std");
 const Tokenizer = @import("tokenizer");
+const Parser = @import("parser");
 
 pub fn main() !void {
     var args_iter = std.process.args();
@@ -14,14 +15,13 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var temp_arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    defer arena.deinit();
+    var tokens_arena = std.heap.ArenaAllocator.init(gpa.allocator());
 
     const file = try std.fs.cwd().openFile(file_name, .{});
     defer file.close();
 
     var tokenizer = try Tokenizer.new(file_name, file.reader(), &temp_arena);
-    const tokens = try tokenizer.get_tokens(arena.allocator());
+    const tokens = try tokenizer.get_tokens(tokens_arena.allocator());
 
     for (tokenizer.errors.items) |err| {
         std.debug.print("{s}\n", .{err});
@@ -30,4 +30,12 @@ pub fn main() !void {
     temp_arena.deinit();
 
     std.debug.print("{any}\n", .{tokens});
+
+    var ast_arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer ast_arena.deinit();
+
+    const parser = Parser.new(@ptrCast(tokens), &ast_arena);
+    _ = parser;
+    
+    tokens_arena.deinit();
 }
