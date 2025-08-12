@@ -1,0 +1,5 @@
+.cache/
+zig-out/
+result
+result/
+.zig-cache/
