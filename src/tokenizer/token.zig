@@ -1,6 +1,8 @@
 const std = @import("std");
 pub const Span = @import("span.zig");
 
+const Token = @This();
+
 value: Value,
 span: Span,
 
@@ -60,7 +62,7 @@ pub const Value = union(Type) {
     float: f128, // Float
     string: []const u8, // String
     char: u8, // Char
-    invalid: u8, // Invalid
+    invalid, // Invalid
 
     plus, // +
     dash, // -
@@ -99,9 +101,9 @@ pub const Value = union(Type) {
     kw_return, // return
     kw_let, // let
 
-    paren_group: []const Value, // (...)
-    bracket_group: []const Value, // [...]
-    brace_group: []const Value, // {...}
+    paren_group: []const Token, // (...)
+    bracket_group: []const Token, // [...]
+    brace_group: []const Token, // {...}
 
     pub fn format(self: Value, writer: *std.Io.Writer) !void {
         switch (self) {
@@ -132,7 +134,7 @@ pub const Value = union(Type) {
             .float => |float| try writer.print("{}", .{float}),
             .string => |string| try writer.print("\"{s}\"", .{string}),
             .char => |char| try writer.print("'{c}'", .{char}),
-            .invalid => |invalid| try writer.print("invalid: '{c}'", .{invalid}),
+            .invalid => try writer.print("invalid", .{}),
 
             .kw_ctx => try writer.print("ctx", .{}),
             .kw_else => try writer.print("else", .{}),
@@ -174,6 +176,6 @@ pub const Value = union(Type) {
     }
 };
 
-pub fn format(self: @This(), writer: *std.Io.Writer) !void {
+pub fn format(self: Token, writer: *std.Io.Writer) !void {
     try writer.print("{f}", .{self.value});
 }
