@@ -2,7 +2,7 @@ const std = @import("std");
 const Tokenizer = @import("tokenizer");
 
 pub fn main() !void {
-  var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+  var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
   defer _ = gpa.deinit();
 
   var arena = std.heap.ArenaAllocator.init(gpa.allocator());
