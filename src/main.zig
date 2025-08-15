@@ -19,10 +19,12 @@ pub fn main() !void {
   var reader = file.reader(&buf);
   const token_slice = try Tokenizer.tokenize_all(file_name, &reader.interface, alloc);
 
-  const parser = Interpreter.Parser.new(alloc, alloc, alloc);
+  var parser = Interpreter.Parser.new(alloc, alloc, alloc, alloc);
   var tokens = Interpreter.Parser.Tokens.new(token_slice);
 
+  const b = try parser.find(Interpreter.Parser.parseExpr, &tokens);
   const result = try parser.parseExpr(&tokens);
+  std.debug.print("{}\n", .{b});
   std.debug.print("{any}\n\n", .{result});
 
   for (tokens.slice) |token| {
