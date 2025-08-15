@@ -1,5 +1,5 @@
 const std = @import("std");
-pub const Token = @import("token.zig");
+pub const Token = @import("tokenizer/token.zig");
 
 pub const Error = error {
   ReadFailed,
@@ -63,6 +63,7 @@ fn tokenize(
       '/' => value = .slash,
       '*' => value = .start,
       '%' => value = .percent,
+      '~' => value = .tilde,
       '?' => value = .question,
       '_' => value = .underscore,
       ',' => value = .comma,

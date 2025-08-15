@@ -19,6 +19,7 @@ pub const Type = enum {
     slash, // /
     start, // *
     percent, // %
+    tilde, // ~
     bar, // |
     bar_bar, // ||
     ampersand, // &
@@ -69,6 +70,7 @@ pub const Value = union(Type) {
     slash, // /
     start, // *
     percent, // %
+    tilde, // ~
     bar, // |
     bar_bar, // ||
     ampersand, // &
@@ -149,6 +151,7 @@ pub const Value = union(Type) {
             .slash => try writer.print("/", .{}),
             .start => try writer.print("*", .{}),
             .percent => try writer.print("%", .{}),
+            .tilde => try writer.print("~", .{}),
             .bar => try writer.print("|", .{}),
             .bar_bar => try writer.print("||", .{}),
             .ampersand => try writer.print("&", .{}),

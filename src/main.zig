@@ -1,5 +1,6 @@
 const std = @import("std");
 const Tokenizer = @import("tokenizer");
+const Interpreter = @import("interpreter");
 
 pub fn main() !void {
   var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
@@ -16,9 +17,15 @@ pub fn main() !void {
   var buf: [64]u8 = undefined;
 
   var reader = file.reader(&buf);
-  const tokens = try Tokenizer.tokenize_all(file_name, &reader.interface, alloc);
+  const token_slice = try Tokenizer.tokenize_all(file_name, &reader.interface, alloc);
 
-  for (tokens) |token| {
+  const parser = Interpreter.Parser.new(alloc, alloc, alloc);
+  var tokens = Interpreter.Parser.Tokens.new(token_slice);
+
+  const result = try parser.parseExpr(&tokens);
+  std.debug.print("{any}\n\n", .{result});
+
+  for (tokens.slice) |token| {
     std.debug.print("{f}\n", .{token});
   }
 }
