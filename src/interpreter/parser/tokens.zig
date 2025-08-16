@@ -1,0 +1,24 @@
+const std = @import("std");
+const Token = @import("tokenizer").Token;
+
+const Tokens = @This();
+
+slice: []const Token,
+
+pub fn new(slice: []const Token) Tokens {
+  return Tokens{ .slice = slice };
+}
+
+pub fn peek(tokens: *const Tokens, offset: usize) ?Token.Value {
+  if (tokens.slice.len <= offset)
+    return null;
+  return tokens.slice[offset].value;
+}
+
+pub fn take(tokens: *Tokens) ?Token {
+  if (tokens.slice.len == 0)
+    return null;
+  const token = tokens.slice[0];
+  tokens.slice = tokens.slice[1..];
+  return token;
+}

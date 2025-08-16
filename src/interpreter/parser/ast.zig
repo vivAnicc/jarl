@@ -14,6 +14,13 @@ pub const Expr = union(enum) {
   string: String,
   char: Char,
   name: Name,
+
+  pub fn format(self: Expr, writer: *std.Io.Writer) !void {
+    // try writer.print("{s}: ", .{@tagName(self)});
+    switch (self) {
+      inline else => |expr| try writer.print("{f}", .{expr}),
+    }
+  }
 };
 
 const Let = @import("ast/stmt/let.zig");
