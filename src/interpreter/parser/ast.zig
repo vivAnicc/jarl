@@ -27,10 +27,25 @@ const Let = @import("ast/stmt/let.zig");
 pub const Stmt = union(enum) {
   let: Let,
   expr: Expr,
+
+  pub fn format(self: Stmt, writer: *std.Io.Writer) !void {
+    // try writer.print("{s}: ", .{@tagName(self)});
+    switch (self) {
+      inline else => |stmt| try writer.print("{f}", .{stmt}),
+    }
+  }
 };
 
 pub const Block = union(enum) {
   simple: []const Token,
+
+  pub fn format(self: Block, writer: *std.Io.Writer) !void {
+    // try writer.print("{s}: ", .{@tagName(self)});
+    switch (self) {
+      .simple => try writer.print("{{ ... }}", .{}),
+      inline else => |block| try writer.print("{f}", .{block}),
+    }
+  }
 };
 
 test {

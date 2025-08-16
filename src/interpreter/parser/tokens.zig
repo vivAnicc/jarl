@@ -22,3 +22,15 @@ pub fn take(tokens: *Tokens) ?Token {
   tokens.slice = tokens.slice[1..];
   return token;
 }
+
+pub fn expect(self: *Tokens, comptime tag: Token.Type)
+  ?@FieldType(Token.Value, @tagName(tag)) {
+  const next = self.peek(0) orelse return null;
+
+  if (next == tag) {
+    _ = self.take();
+    return @field(next, @tagName(tag));
+  }
+
+  return null;
+}

@@ -29,11 +29,17 @@ pub fn main() !void {
     tokens = s;
   }
 
-  const result = try parser.parseExpr(&tokens);
+  var errors = Interpreter.Parser.Errors.new(alloc);
+
+  const result = try parser.parseExpr(&tokens, &errors);
   if (result) |expr| {
     std.debug.print("{f}\n\n", .{expr});
   } else {
-    std.debug.print("null\n\n", .{});
+    std.debug.print("Errors encoutered:\n", .{});
+    for (errors.list.items) |e| {
+      std.debug.print("ERROR: {s}\n", .{e});
+    }
+    std.debug.print("\n", .{});
   }
 
   for (tokens.slice) |token| {
