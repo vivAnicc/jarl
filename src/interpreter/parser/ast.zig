@@ -31,7 +31,29 @@ pub const Stmt = union(enum) {
   pub fn format(self: Stmt, writer: *std.Io.Writer) !void {
     // try writer.print("{s}: ", .{@tagName(self)});
     switch (self) {
+      .expr => |expr| try writer.print("{f};", .{expr}),
       inline else => |stmt| try writer.print("{f}", .{stmt}),
+    }
+  }
+};
+
+pub const Evaluation = struct {
+  stmts: []const Stmt,
+  expr: ?*const Expr,
+
+  pub fn format(self: Evaluation, writer: *std.Io.Writer) !void {
+    for (self.stmts, 0..) |stmt, idx| {
+      if (idx != 0) {
+        try writer.print("\n", .{});
+      }
+      try writer.print("{f}", .{stmt});
+    }
+
+    if (self.expr) |expr| {
+      if (self.stmts.len != 0) {
+        try writer.print("\n", .{});
+      }
+      try writer.print("{f}", .{expr});
     }
   }
 };

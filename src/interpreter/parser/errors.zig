@@ -1,4 +1,5 @@
 const std = @import("std");
+const Span = @import("tokenizer").Token.Span;
 
 const Errors = @This();
 
@@ -14,11 +15,16 @@ pub fn new(alloc: std.mem.Allocator) Errors {
 
 pub fn format(
   self: *Errors,
+  span: Span,
   comptime string: []const u8,
   args: anytype,
 ) std.mem.Allocator.Error!void {
   const msg = try std.fmt.allocPrint(
-    self.alloc, string, args,
+    self.alloc, "{s}:{}-{}: " ++ string, .{
+      span.file,
+      span.start,
+      span.end,
+    } ++ args,
   );
   try self.list.append(self.alloc, msg);
 }

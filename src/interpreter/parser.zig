@@ -11,6 +11,8 @@ symbols_alloc: std.mem.Allocator,
 values_alloc: std.mem.Allocator,
 temp_alloc: std.mem.Allocator,
 
+pub var last: ?Token.Span = null;
+
 pub fn new(
   ast_alloc: std.mem.Allocator,
   symbols_alloc: std.mem.Allocator,
@@ -67,7 +69,11 @@ pub fn parseTokenType(comptime t: Token.Type)
     fn parseTokenValue(_: *Parser, tokens: *Tokens, errors: ?*Errors) ReturnType {
       const next = tokens.peek(0) orelse {
         if (errors) |e| {
-          try e.format("Expected {f}, found EOF", .{t});
+          try e.format(
+            last orelse @panic("Unknown location"),
+            "Expected {f}, found EOF",
+            .{t}
+          );
         }
         return null;
       };
@@ -78,7 +84,7 @@ pub fn parseTokenType(comptime t: Token.Type)
         }
 
         if (errors) |e| {
-          try e.format("Expected {f}, found {f}", .{t, next});
+          try e.format(tokens.slice[0].span, "Expected {f}, found {f}", .{t, next});
         }
         return null;
     }
@@ -134,14 +140,14 @@ pub fn parseExpr(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.Ex
     .tilde => {
       const next = tokens.peek(1) orelse {
         if (errors) |e| {
-          try e.format("Expected identifier, found EOF. Note: a '~' should always be followed by an identifier and returns its name", .{});
+          try e.format(last orelse @panic("Unknown location"), "Expected identifier, found EOF. Note: a '~' should always be followed by an identifier and returns its name", .{});
         }
         return null;
       };
 
       if (next != .ident) {
         if (errors) |e| {
-          try e.format("Expected identifier, found {f}. Note: a '~' should always be followed by an identifier and returns its name", .{next});
+          try e.format(tokens.slice[0].span, "Expected identifier, found {f}. Note: a '~' should always be followed by an identifier and returns its name", .{next});
         }
         return null;
       }
@@ -157,7 +163,7 @@ pub fn parseExpr(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.Ex
 
     else => |token| {
       if (errors) |e| {
-        try e.format("Expected an expression, found {f}", .{token});
+        try e.format(tokens.slice[0].span, "Expected an expression, found {f}", .{token});
       }
       return null;
     },
@@ -178,14 +184,14 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
   switch (tokens.peek(0) orelse return null) {
     .kw_let => {
       const start = tokens.*;
-      _ = tokens.take();
+      const prev = tokens.take().?;
 
       const name = tokens.expect(.ident) orelse {
         if (errors) |e| {
           if (tokens.peek(0)) |next| {
-            try e.format("Expected identifier, found {f}", .{next});
+            try e.format(tokens.slice[0].span, "Expected identifier, found {f}", .{next});
           } else {
-            try e.format("Expected identifier, found EOF", .{});
+            try e.format(prev.span, "Expected identifier, found EOF", .{});
           }
         }
         tokens.* = start;
@@ -195,7 +201,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
       if (tokens.peek(0) == null) {
         tokens.* = start;
         if (errors) |e| {
-          try e.format("Expected = or :, found EOF", .{});
+          try e.format(last orelse @panic("Unkown location"), "Expected = or :, found EOF", .{});
         }
         return null;
       }
@@ -211,7 +217,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       if (tokens.peek(0) == null) {
         if (errors) |e| {
-          try e.format("Expected =, found EOF", .{});
+          try e.format(last orelse @panic("Unkown location"), "Expected =, found EOF", .{});
         }
         tokens.* = start;
         return null;
@@ -219,7 +225,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       if (tokens.peek(0).? != .equals) {
         if (errors) |e| {
-          try e.format("Expected =, found {f}", .{tokens.peek(0).?});
+          try e.format(tokens.slice[0].span, "Expected =, found {f}", .{tokens.peek(0).?});
         }
         tokens.* = start;
         return null;
@@ -234,7 +240,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       const semi = tokens.take() orelse {
         if (errors) |e| {
-          try e.format("Expected ;, found EOF", .{});
+          try e.format(last orelse @panic("Unkown location"), "Expected ;, found EOF", .{});
         }
         tokens.* = start;
         return null;
@@ -242,7 +248,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       if (semi.value != .semi) {
         if (errors) |e| {
-          try e.format("Expected ;, found {f}", .{semi.value});
+          try e.format(semi.span, "Expected ;, found {f}", .{semi.value});
         }
         tokens.* = start;
         return null;
@@ -267,7 +273,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       const semi = tokens.take() orelse {
         if (errors) |e| {
-          try e.format("Expected ;, found EOF", .{});
+          try e.format(last orelse @panic("Unkown location"), "Expected ;, found EOF", .{});
         }
         tokens.* = start;
         return null;
@@ -275,7 +281,7 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
 
       if (semi.value != .semi) {
         if (errors) |e| {
-          try e.format("Expected ;, found {f}", .{semi.value});
+          try e.format(semi.span, "Expected ;, found {f}", .{semi.value});
         }
         tokens.* = start;
         return null;
@@ -286,6 +292,53 @@ pub fn parseStmt(self: *Parser, tokens: *Tokens, errors: ?*Errors) Error!?ast.St
       };
     },
   }
+}
+
+pub fn parseEvaluation(
+  self: *Parser,
+  tokens: *Tokens,
+  errors: ?*Errors
+) Error!?ast.Evaluation {
+  const start = tokens.*;
+
+  var stmts = std.ArrayList(ast.Stmt).init(self.ast_alloc);
+  errdefer stmts.deinit();
+
+  while (try self.probe(parseStmt, tokens)) |loc| {
+    tokens.* = loc;
+    const stmt = try self.parseStmt(tokens, errors);
+    try stmts.append(stmt.?);
+  }
+
+  if (tokens.slice.len == 0) {
+    return ast.Evaluation{
+      .stmts = try stmts.toOwnedSlice(),
+      .expr = null,
+    };
+  }
+
+  if (try self.probe(parseExpr, tokens)) |last_stmt| {
+    if (tokens.slice.len == 0) {
+      tokens.* = last_stmt;
+
+      return ast.Evaluation{
+        .stmts = try stmts.toOwnedSlice(),
+        .expr = try self.parseExprAlloc(tokens, errors) orelse unreachable,
+      };
+    }
+
+    tokens.* = last_stmt;
+
+    // report errors for a statement
+    _ = try self.parseStmt(tokens, errors);
+    tokens.* = start;
+    return null;
+  }
+
+  // report errors for an expression
+  _ = try self.parseExpr(tokens, errors);
+  tokens.* = start;
+  return null;
 }
 
 test {

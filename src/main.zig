@@ -22,29 +22,22 @@ pub fn main() !void {
   var parser = Interpreter.Parser.new(alloc, alloc, alloc, alloc);
   var tokens = Interpreter.Parser.Tokens.new(token_slice);
 
-  const save = try parser.probe(Interpreter.Parser.parseExpr, &tokens);
-
-  if (save) |s| {
-    std.debug.print("Probe successful: ", .{});
-    tokens = s;
-  }
-
   var errors = Interpreter.Parser.Errors.new(alloc);
 
-  const result = try parser.parseExpr(&tokens, &errors);
-  if (result) |expr| {
-    std.debug.print("{f}\n\n", .{expr});
+  const result = try parser.parseEvaluation(&tokens, &errors);
+  if (result) |eval| {
+    std.debug.print("{f}\n", .{eval});
   } else {
     std.debug.print("Errors encoutered:\n", .{});
     for (errors.list.items) |e| {
       std.debug.print("ERROR: {s}\n", .{e});
     }
     std.debug.print("\n", .{});
+    std.process.exit(1);
   }
 
-  for (tokens.slice) |token| {
-    std.debug.print("{f}\n", .{token});
-  }
+  if (tokens.slice.len != 0)
+    unreachable;
 }
 
 test {

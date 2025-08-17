@@ -1,11 +1,14 @@
 const std = @import("std");
 const Token = @import("tokenizer").Token;
+const Parser = @import("../parser.zig");
 
 const Tokens = @This();
 
 slice: []const Token,
 
 pub fn new(slice: []const Token) Tokens {
+  if (slice.len != 0)
+    Parser.last = slice[0].span;
   return Tokens{ .slice = slice };
 }
 
@@ -20,6 +23,7 @@ pub fn take(tokens: *Tokens) ?Token {
     return null;
   const token = tokens.slice[0];
   tokens.slice = tokens.slice[1..];
+  Parser.last = token.span;
   return token;
 }
 
